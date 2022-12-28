@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 pragma solidity ^0.8.0;
 
-contract multiSend {
+contract multiSend is ReentrancyGuard {
 
     struct EtherSend {
         address receiver;
@@ -17,7 +18,7 @@ contract multiSend {
         uint256 amount;
     }
 
-    function etherMultiSend(EtherSend[] calldata etherSend) public payable {
+    function etherMultiSend(EtherSend[] calldata etherSend) public payable nonReentrant() {
         uint256 totalAmount;
         for (uint256 i = 0; i < etherSend.length; i++) {
             EtherSend memory local = etherSend[i];
@@ -46,8 +47,6 @@ contract multiSend {
     function ERC20MultiSend(ERC20Send[] calldata erc20Send) public {
         for (uint256 i = 0; i < erc20Send.length; i++){
             ERC20Send memory local = erc20Send[i];
-            require(local.receiver != address(0), "Invalid Address");
-            require(local.amount >= IERC20(local.token).allowance(msg.sender, address(this)), "Invalid Allowance");
             IERC20(local.token).transferFrom(msg.sender, local.receiver, local.amount);
         }
     }
