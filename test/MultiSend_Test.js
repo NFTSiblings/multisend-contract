@@ -5,13 +5,13 @@ beforeEach(async () => {
 
     [owner, address1, address2, address3] = await ethers.getSigners()
     
-    MultiSend = await ethers.getContractFactory('multiSend')
+    MultiSend = await ethers.getContractFactory('MultiSend')
     multiSend = await MultiSend.deploy()
     await multiSend.deployed()
 
 })
 
-describe('multiSend Contract Test', () => {
+describe('MultiSend Contract Test', () => {
 
     describe('Ether Transfers', () => {
 

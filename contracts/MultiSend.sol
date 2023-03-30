@@ -5,22 +5,23 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 pragma solidity ^0.8.0;
 
-contract multiSend is ReentrancyGuard {
-
+contract MultiSend is ReentrancyGuard {
     struct EtherSend {
         address receiver;
         uint256 amount;
     }
-    
+
     struct ERC20Send {
         address token;
         address receiver;
         uint256 amount;
     }
 
-    function etherMultiSend(EtherSend[] calldata etherSend) public payable nonReentrant() {
+    function etherMultiSend(
+        EtherSend[] calldata etherSend
+    ) public payable nonReentrant {
         uint256 totalAmount;
-        for (uint256 i = 0; i < etherSend.length; i++) {
+        for (uint256 i; i < etherSend.length; i++) {
             EtherSend memory local = etherSend[i];
             require(local.receiver != address(0), "Invalid Address");
             totalAmount += local.amount;
@@ -29,25 +30,28 @@ contract multiSend is ReentrancyGuard {
         require(totalAmount == msg.value, "Invalid Amount");
 
         uint256 totalRefund;
-        for (uint256 i = 0; i < etherSend.length; i++) {
-            (bool sent, ) = etherSend[i].receiver.call{value: etherSend[i].amount}("");
-            if(!sent) {
-                totalRefund += etherSend[i].amount;
-            }
+        for (uint256 i; i < etherSend.length; i++) {
+            EtherSend memory local = etherSend[i];
+            (bool sent, ) = local.receiver.call{value: local.amount}("");
+            if (!sent) totalRefund += local.amount;
         }
 
-        if(totalRefund > 0) {
+        if (totalRefund > 0) {
             (bool sent, ) = msg.sender.call{value: totalRefund}("");
-            if(!sent){
-                revert("MultiSend Failure");
-            }
+            if (!sent) revert("MultiSend Failure");
         }
     }
 
-    function ERC20MultiSend(ERC20Send[] calldata erc20Send) public {
-        for (uint256 i = 0; i < erc20Send.length; i++){
+    function ERC20MultiSend(
+        ERC20Send[] calldata erc20Send
+    ) public nonReentrant {
+        for (uint256 i; i < erc20Send.length; i++) {
             ERC20Send memory local = erc20Send[i];
-            IERC20(local.token).transferFrom(msg.sender, local.receiver, local.amount);
+            IERC20(local.token).transferFrom(
+                msg.sender,
+                local.receiver,
+                local.amount
+            );
         }
     }
 }
